@@ -110,22 +110,20 @@ class ChatBot {
         this.conversationHistory = [];
     }
 
-    addInitialMessage() {
+    async addInitialMessage() {
         if (!this.currentPersonality) return;
         
-        const message = this.getInitialMessage();
+        try {
+            const response = await fetch('/api/start-message');
+            const data = await response.json();
+            const message = data.message || "Hello... I'm here because someone suggested I should talk to someone. I'm not really sure how this works.";
         this.addMessage(message, 'bot');
-    }
-
-    getInitialMessage() {
-        const messages = [
-            "Hello... I'm here because someone suggested I should talk to someone. I'm not really sure how this works.",
-            "Hi. I was told this might help, though I'm honestly not sure about any of this.",
-            "Hello. I'm here because I think I need to talk to someone about what I've been going through.",
-            "Hi there. I'm nervous about being here, but I know I need to try something different.",
-            "Hello. I decided to come here because things have been really difficult lately."
-        ];
-        return messages[Math.floor(Math.random() * messages.length)];
+        } catch (error) {
+            console.error('Failed to load start message:', error);
+            // Fallback message if API fails
+            const fallbackMessage = "Hello... I'm here because someone suggested I should talk to someone. I'm not really sure how this works.";
+            this.addMessage(fallbackMessage, 'bot');
+        }
     }
 
     checkApiKey() {
