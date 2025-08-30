@@ -117,7 +117,7 @@ class ChatBot {
             const response = await fetch('/api/start-message');
             const data = await response.json();
             const message = data.message || "Hello... I'm here because someone suggested I should talk to someone. I'm not really sure how this works.";
-        this.addMessage(message, 'bot');
+            this.addMessage(message, 'bot');
         } catch (error) {
             console.error('Failed to load start message:', error);
             // Fallback message if API fails
@@ -485,86 +485,13 @@ class ChatBot {
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Chat History - ${dateStr}</title>
-                <style>
-                    body {
-                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                        line-height: 1.6;
-                        color: #333;
-                        max-width: 800px;
-                        margin: 0 auto;
-                        padding: 20px;
-                        background: white;
-                    }
-                    .header {
-                        text-align: center;
-                        border-bottom: 2px solid #4f46e5;
-                        padding-bottom: 20px;
-                        margin-bottom: 30px;
-                    }
-                    .header h1 {
-                        color: #4f46e5;
-                        margin: 0 0 10px 0;
-                        font-size: 28px;
-                    }
-                    .header .date {
-                        color: #666;
-                        font-size: 14px;
-                    }
-                    .message {
-                        margin-bottom: 20px;
-                        padding: 15px;
-                        border-radius: 12px;
-                        page-break-inside: avoid;
-                    }
-                    .user-message {
-                        background: #e0f2fe;
-                        border-left: 4px solid #0ea5e9;
-                        margin-left: 40px;
-                    }
-                    .bot-message {
-                        background: #f8fafc;
-                        border-left: 4px solid #4f46e5;
-                        margin-right: 40px;
-                    }
-                    .message-header {
-                        font-weight: bold;
-                        font-size: 12px;
-                        color: #666;
-                        margin-bottom: 8px;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                    }
-                    .message-content {
-                        color: #333;
-                        white-space: pre-wrap;
-                        word-wrap: break-word;
-                    }
-                    .message-time {
-                        font-size: 11px;
-                        color: #999;
-                        margin-top: 8px;
-                        text-align: right;
-                    }
-                    .footer {
-                        margin-top: 40px;
-                        padding-top: 20px;
-                        border-top: 1px solid #e5e5e5;
-                        text-align: center;
-                        color: #666;
-                        font-size: 12px;
-                    }
-                    @media print {
-                        body { margin: 0; padding: 15px; }
-                        .header { page-break-after: avoid; }
-                        .message { page-break-inside: avoid; }
-                    }
-                </style>
+                <link rel="stylesheet" href="styles.css">
             </head>
-            <body>
+            <body class="pdf-print-styles">
                 <div class="header">
                     <h1>CBT Training Session${this.currentPersonality ? ` with ${this.currentPersonality.name}` : ''}</h1>
                     ${this.currentPersonality ? `
-                        <div class="client-info" style="margin: 15px 0; padding: 12px; background: #f3f4f6; border-radius: 8px;">
+                        <div class="client-info">
                             <strong>Client:</strong> ${this.currentPersonality.name}, Age ${this.currentPersonality.age}<br>
                             <strong>Condition:</strong> ${this.currentPersonality.condition}<br>
                             <strong>Background:</strong> ${this.currentPersonality.background}
