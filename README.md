@@ -1,24 +1,16 @@
-# CBT - 🎓 **Educational Focus**: Designed specifically for CBT training and psychology education
-- 👥 **Multiple Clients**: Various simulated clients with different mental health presentations
+# Client chat
+
+A web application designed for psychology students to practice Cognitive Behavioral Therapy (CBT) skills with realistic AI-simulated clients. Each client presents mental health conditions and communication patterns to provide valuable training experience.
+
+## Features
+
+- 🎓 **Educational Focus**: Designed for CBT training and psychology education
+- 👥 **Multiple Clients**: 5 different simulated clients with various mental health conditions
 - 🧠 **Realistic Presentations**: Authentic symptom presentations and communication styles
 - 🎨 **Modern Interface**: Clean, professional chat interface optimized for therapeutic practice
 - 📋 **Client Profiles**: Detailed background information for each simulated client
 - 🔐 **Secure API Handling**: Server-side Claude API integration with no client-side exposure
 - 📄 **Session Documentation**: PDF export functionality for training records and supervision
-- 📱 **Mobile-Friendly**: Responsive design works on all devices
-- ⚡ **Fast Performance**: Flask backend optimized for educational useSimulator - Multi-Client AI Practice Platform
-
-A comprehensive web application designed for undergraduate psychology students to practice Cognitive Behavioral Therapy (CBT) skills with realistic AI-simulated clients. Each client presents authentic mental health conditions and communication patterns to provide valuable training experience.
-
-## Features
-
-- � **Educational Focus**: Designed specifically for CBT training and psychology education
-- 👥 **Multiple Clients**: 5 different simulated clients with various mental health conditions
-- � **Realistic Presentations**: Authentic symptom presentations and communication styles
-- 🎨 **Modern Interface**: Clean, professional chat interface optimized for therapeutic practice
-- 📋 **Client Profiles**: Detailed background information for each simulated client
-- 🔐 **Secure API Handling**: Server-side Claude API integration with no client-side exposure
-- � **Session Documentation**: PDF export functionality for training records and supervision
 - 📱 **Mobile-Friendly**: Responsive design works on all devices
 - ⚡ **Fast Performance**: Flask backend optimized for educational use
 
