@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Sarah</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="chat-header">
+            <div class="avatar">
+                <div class="avatar-circle">S</div>
+            </div>
+            <div class="header-info">
+                <h1>Chat with Sarah</h1>
+                <p class="status" id="status">Online</p>
+            </div>
+            <div class="header-actions">
+                <button id="printPdf" class="action-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6,9 6,2 18,2 18,9"/>
+                        <path d="M6,18H4a2,2,0,0,1-2-2V11a2,2,0,0,1,2-2H20a2,2,0,0,1,2,2v5a2,2,0,0,1-2,2H18"/>
+                        <rect x="6" y="14" width="12" height="8"/>
+                    </svg>
+                    Print PDF
+                </button>
+                <button id="clearChat" class="action-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18"/>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        <line x1="10" y1="11" x2="10" y2="17"/>
+                        <line x1="14" y1="11" x2="14" y2="17"/>
+                    </svg>
+                    Clear Chat
+                </button>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    <div class="message-avatar">S</div>
+                    <div class="message-content">
+                        <p>Hi there! I'm Sarah, your virtual assistant. I'm here to help and chat with you about anything you'd like. How are you doing today?</p>
+                        <span class="message-time" id="initialTime"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <input type="text" id="messageInput" placeholder="Type your message here..." maxlength="1000">
+                    <button id="sendButton" class="send-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m22 2-7 20-4-9-9-4z"/>
+                            <path d="M22 2 11 13"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="input-info">
+                    <span class="char-count"><span id="charCount">0</span>/1000</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Key Modal -->
+    <div id="apiKeyModal" class="modal">
+        <div class="modal-content">
+            <h2>Claude API Configuration</h2>
+            <p>Please enter your Claude API key to start chatting:</p>
+            <input type="password" id="apiKeyInput" placeholder="Enter your Claude API key">
+            <div class="modal-actions">
+                <button id="saveApiKey" class="btn-primary">Save & Start Chatting</button>
+            </div>
+            <div class="api-info">
+                <p><strong>How to get your API key:</strong></p>
+                <ol>
+                    <li>Go to <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a></li>
+                    <li>Sign up or log in to your account</li>
+                    <li>Navigate to "API Keys" in your dashboard</li>
+                    <li>Create a new API key</li>
+                    <li>Copy and paste it here</li>
+                </ol>
+                <p><small>Your API key is stored locally in your browser and never sent anywhere except to Claude's API.</small></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
