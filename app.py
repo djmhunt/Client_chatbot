@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory
 import os
+import json
 import anthropic
 from flask_cors import CORS
 
@@ -8,6 +9,7 @@ CORS(app)  # Enable CORS for all routes
 
 # Claude API configuration
 CLAUDE_MODEL = "claude-sonnet-4-20250514"
+PERSONALITIES_DIR = "personalities"
 
 @app.route('/')
 def index():
@@ -18,6 +20,52 @@ def index():
 def static_files(filename):
     """Serve static files (CSS, JS, etc.)"""
     return send_from_directory('.', filename)
+
+@app.route('/api/personalities')
+def get_personalities():
+    """Get list of available personalities"""
+    try:
+        personalities = []
+        personalities_path = os.path.join(os.path.dirname(__file__), PERSONALITIES_DIR)
+        
+        if os.path.exists(personalities_path):
+            for filename in os.listdir(personalities_path):
+                if filename.endswith('.json'):
+                    filepath = os.path.join(personalities_path, filename)
+                    try:
+                        with open(filepath, 'r', encoding='utf-8') as f:
+                            personality_data = json.load(f)
+                            personalities.append({
+                                'id': filename[:-5],  # Remove .json extension
+                                'name': personality_data.get('name', 'Unknown'),
+                                'condition': personality_data.get('condition', 'Unknown'),
+                                'age': personality_data.get('age', 'Unknown'),
+                                'background': personality_data.get('background', '')
+                            })
+                    except Exception as e:
+                        print(f"Error loading personality file {filename}: {e}")
+                        continue
+        
+        return jsonify({'personalities': personalities})
+    except Exception as e:
+        return jsonify({'error': {'message': f'Failed to load personalities: {str(e)}'}}), 500
+
+@app.route('/api/personality/<personality_id>')
+def get_personality(personality_id):
+    """Get a specific personality by ID"""
+    try:
+        personalities_path = os.path.join(os.path.dirname(__file__), PERSONALITIES_DIR)
+        filepath = os.path.join(personalities_path, f"{personality_id}.json")
+        
+        if not os.path.exists(filepath):
+            return jsonify({'error': {'message': 'Personality not found'}}), 404
+        
+        with open(filepath, 'r', encoding='utf-8') as f:
+            personality_data = json.load(f)
+        
+        return jsonify(personality_data)
+    except Exception as e:
+        return jsonify({'error': {'message': f'Failed to load personality: {str(e)}'}}), 500
 
 @app.route('/api/claude', methods=['POST'])
 def claude_proxy():

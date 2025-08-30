@@ -1,12 +1,13 @@
 class ChatBot {
     constructor() {
         this.apiKey = localStorage.getItem('claude_api_key');
-        this.personality = '';
+        this.currentPersonality = null;
+        this.personalities = [];
         this.conversationHistory = [];
         this.isTyping = false;
         
         this.initializeElements();
-        this.loadPersonality();
+        this.loadPersonalities();
         this.checkApiKey();
         this.setupEventListeners();
         this.setInitialTime();
@@ -18,21 +19,113 @@ class ChatBot {
         this.sendButton = document.getElementById('sendButton');
         this.clearButton = document.getElementById('clearChat');
         this.printPdfButton = document.getElementById('printPdf');
+        this.selectPersonalityButton = document.getElementById('selectPersonality');
         this.charCount = document.getElementById('charCount');
         this.status = document.getElementById('status');
+        this.chatTitle = document.getElementById('chatTitle');
+        this.avatarCircle = document.getElementById('avatarCircle');
+        
+        // Modals
+        this.personalityModal = document.getElementById('personalityModal');
+        this.personalityList = document.getElementById('personalityList');
+        this.cancelPersonalityButton = document.getElementById('cancelPersonality');
         this.apiKeyModal = document.getElementById('apiKeyModal');
         this.apiKeyInput = document.getElementById('apiKeyInput');
         this.saveApiKeyButton = document.getElementById('saveApiKey');
     }
 
-    async loadPersonality() {
+    async loadPersonalities() {
         try {
-            const response = await fetch('./personality.txt');
-            this.personality = await response.text();
+            const response = await fetch('/api/personalities');
+            const data = await response.json();
+            this.personalities = data.personalities || [];
+            this.populatePersonalitySelector();
         } catch (error) {
-            console.error('Failed to load personality file:', error);
-            this.personality = 'You are a helpful and friendly assistant.';
+            console.error('Failed to load personalities:', error);
+            this.personalities = [];
         }
+    }
+
+    populatePersonalitySelector() {
+        this.personalityList.innerHTML = '';
+        
+        this.personalities.forEach(personality => {
+            const option = document.createElement('div');
+            option.className = 'personality-option';
+            option.dataset.personalityId = personality.id;
+            
+            option.innerHTML = `
+                <div class="personality-name">${personality.name}</div>
+                <div class="personality-condition">${personality.condition}</div>
+                <div class="personality-details">
+                    <span class="personality-age">Age: ${personality.age}</span> • 
+                    ${personality.background}
+                </div>
+            `;
+            
+            option.addEventListener('click', () => this.selectPersonality(personality.id));
+            this.personalityList.appendChild(option);
+        });
+    }
+
+    async selectPersonality(personalityId) {
+        try {
+            const response = await fetch(`/api/personality/${personalityId}`);
+            const personalityData = await response.json();
+            
+            this.currentPersonality = personalityData;
+            this.updateUIForPersonality();
+            this.hidePersonalityModal();
+            this.clearChatForNewPersonality();
+            this.addInitialMessage();
+            
+            // Show chat controls
+            this.printPdfButton.style.display = 'inline-flex';
+            this.clearButton.style.display = 'inline-flex';
+            
+        } catch (error) {
+            console.error('Failed to load personality:', error);
+            alert('Failed to load selected client. Please try again.');
+        }
+    }
+
+    updateUIForPersonality() {
+        if (this.currentPersonality) {
+            this.chatTitle.textContent = `Chat with ${this.currentPersonality.name}`;
+            this.avatarCircle.textContent = this.currentPersonality.name.charAt(0).toUpperCase();
+            this.status.textContent = 'Online';
+        }
+    }
+
+    showPersonalityModal() {
+        this.personalityModal.style.display = 'block';
+    }
+
+    hidePersonalityModal() {
+        this.personalityModal.style.display = 'none';
+    }
+
+    clearChatForNewPersonality() {
+        this.chatMessages.innerHTML = '';
+        this.conversationHistory = [];
+    }
+
+    addInitialMessage() {
+        if (!this.currentPersonality) return;
+        
+        const message = this.getInitialMessage();
+        this.addMessage(message, 'bot');
+    }
+
+    getInitialMessage() {
+        const messages = [
+            "Hello... I'm here because someone suggested I should talk to someone. I'm not really sure how this works.",
+            "Hi. I was told this might help, though I'm honestly not sure about any of this.",
+            "Hello. I'm here because I think I need to talk to someone about what I've been going through.",
+            "Hi there. I'm nervous about being here, but I know I need to try something different.",
+            "Hello. I decided to come here because things have been really difficult lately."
+        ];
+        return messages[Math.floor(Math.random() * messages.length)];
     }
 
     checkApiKey() {
@@ -79,6 +172,10 @@ class ChatBot {
         // Print PDF
         this.printPdfButton.addEventListener('click', () => this.printChatAsPdf());
 
+        // Personality selector
+        this.selectPersonalityButton.addEventListener('click', () => this.showPersonalityModal());
+        this.cancelPersonalityButton.addEventListener('click', () => this.hidePersonalityModal());
+
         // API key modal
         this.saveApiKeyButton.addEventListener('click', () => this.saveApiKey());
         this.apiKeyInput.addEventListener('keypress', (e) => {
@@ -94,6 +191,12 @@ class ChatBot {
                 if (this.apiKey) {
                     this.hideApiKeyModal();
                 }
+            }
+        });
+
+        this.personalityModal.addEventListener('click', (e) => {
+            if (e.target === this.personalityModal) {
+                this.hidePersonalityModal();
             }
         });
     }
@@ -162,6 +265,11 @@ class ChatBot {
             return;
         }
 
+        if (!this.currentPersonality) {
+            this.showPersonalityModal();
+            return;
+        }
+
         // Add user message to chat
         this.addMessage(message, 'user');
         this.messageInput.value = '';
@@ -186,7 +294,12 @@ class ChatBot {
         
         const avatar = document.createElement('div');
         avatar.className = 'message-avatar';
-        avatar.textContent = sender === 'user' ? 'U' : 'S';
+        if (sender === 'user') {
+            avatar.textContent = 'U';
+        } else {
+            avatar.textContent = this.currentPersonality ? 
+                this.currentPersonality.name.charAt(0).toUpperCase() : 'B';
+        }
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
@@ -224,13 +337,15 @@ class ChatBot {
         
         const avatar = document.createElement('div');
         avatar.className = 'message-avatar';
-        avatar.textContent = 'S';
+        avatar.textContent = this.currentPersonality ? 
+            this.currentPersonality.name.charAt(0).toUpperCase() : 'B';
         
         const typingContent = document.createElement('div');
         typingContent.className = 'typing-indicator';
         
         const typingText = document.createElement('span');
-        typingText.textContent = 'Sarah is typing';
+        const personName = this.currentPersonality ? this.currentPersonality.name : 'Client';
+        typingText.textContent = `${personName} is typing`;
         
         const dotsContainer = document.createElement('div');
         dotsContainer.className = 'typing-dots';
@@ -275,7 +390,7 @@ class ChatBot {
         const requestBody = {
             model: 'claude-sonnet-4-20250514', // Updated to match app.py
             max_tokens: 1000,
-            system: this.personality,
+            system: this.currentPersonality ? this.currentPersonality.personality : '',
             messages: messages,
             api_key: this.apiKey
         };
@@ -341,16 +456,12 @@ class ChatBot {
     }
 
     clearChat() {
-        if (confirm('Are you sure you want to clear the chat history?')) {
-            // Keep only the initial message
-            const messages = this.chatMessages.children;
-            const initialMessage = messages[0]; // First message from Sarah
-            
-            this.chatMessages.innerHTML = '';
-            this.chatMessages.appendChild(initialMessage);
-            
-            // Clear conversation history but keep personality
+        if (confirm('Are you sure you want to start a new session with this client?')) {
+            this.clearChatForNewPersonality();
             this.conversationHistory = [];
+            if (this.currentPersonality) {
+                this.addInitialMessage();
+            }
         }
     }
 
@@ -453,14 +564,21 @@ class ChatBot {
             </head>
             <body>
                 <div class="header">
-                    <h1>Chat History with Sarah</h1>
+                    <h1>CBT Training Session${this.currentPersonality ? ` with ${this.currentPersonality.name}` : ''}</h1>
+                    ${this.currentPersonality ? `
+                        <div class="client-info" style="margin: 15px 0; padding: 12px; background: #f3f4f6; border-radius: 8px;">
+                            <strong>Client:</strong> ${this.currentPersonality.name}, Age ${this.currentPersonality.age}<br>
+                            <strong>Condition:</strong> ${this.currentPersonality.condition}<br>
+                            <strong>Background:</strong> ${this.currentPersonality.background}
+                        </div>
+                    ` : ''}
                     <div class="date">Generated on ${dateStr} at ${timeStr}</div>
                 </div>
                 <div class="chat-content">
                     ${this.generatePdfChatContent()}
                 </div>
                 <div class="footer">
-                    <p>Chat conversation with Sarah AI Assistant</p>
+                    <p>CBT Training Session${this.currentPersonality ? ` with ${this.currentPersonality.name}` : ''}</p>
                     <p>Total messages: ${this.conversationHistory.length + 1}</p>
                 </div>
             </body>
@@ -498,7 +616,8 @@ class ChatBot {
             const messageTime = message.querySelector('.message-time');
             
             if (messageContent) {
-                const sender = isUser ? 'You' : 'Sarah';
+                const sender = isUser ? 'You (Therapist)' : 
+                    (this.currentPersonality ? this.currentPersonality.name : 'Client');
                 const cssClass = isUser ? 'user-message' : 'bot-message';
                 const time = messageTime ? messageTime.textContent : '';
 
