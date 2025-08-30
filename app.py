@@ -3,10 +3,8 @@ import os
 import json
 import anthropic
 import random
-from flask_cors import CORS
 
 app = Flask(__name__, static_folder='.', static_url_path='')
-CORS(app)  # Enable CORS for all routes
 
 # Claude API configuration
 CLAUDE_MODEL = "claude-sonnet-4-20250514"
