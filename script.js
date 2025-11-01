@@ -5,8 +5,10 @@ class ChatBot {
         this.personalities = [];
         this.conversationHistory = [];
         this.isTyping = false;
+        this.claudeModel = null; // Will be loaded from backend
         
         this.initializeElements();
+        this.loadConfig();
         this.loadPersonalities();
         this.checkApiKey();
         this.setupEventListeners();
@@ -32,6 +34,17 @@ class ChatBot {
         this.apiKeyModal = document.getElementById('apiKeyModal');
         this.apiKeyInput = document.getElementById('apiKeyInput');
         this.saveApiKeyButton = document.getElementById('saveApiKey');
+    }
+
+    async loadConfig() {
+        try {
+            const response = await fetch('/api/config');
+            const data = await response.json();
+            this.claudeModel = data.model || 'claude-sonnet-4-20250514';
+        } catch (error) {
+            console.error('Failed to load config:', error);
+            this.claudeModel = 'claude-sonnet-4-20250514'; // Fallback
+        }
     }
 
     async loadPersonalities() {
@@ -386,7 +399,7 @@ class ChatBot {
 
         // Prepare the API request
         const requestBody = {
-            model: 'claude-sonnet-4-20250514', // Updated to match app.py
+            model: this.claudeModel,
             max_tokens: 1000,
             system: this.currentPersonality ? this.currentPersonality.personality : '',
             messages: messages,

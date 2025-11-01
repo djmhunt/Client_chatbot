@@ -66,6 +66,11 @@ def get_personality(personality_id):
     except Exception as e:
         return jsonify({'error': {'message': f'Failed to load personality: {str(e)}'}}), 500
 
+@app.route('/api/config')
+def get_config():
+    """Get configuration settings including Claude model"""
+    return jsonify({'model': CLAUDE_MODEL})
+
 @app.route('/api/start-message')
 def get_start_message():
     """Get a randomly selected initial message"""
