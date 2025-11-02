@@ -131,9 +131,11 @@ def claude_proxy():
         if not messages:
             return jsonify({'error': {'message': 'Messages are required'}}), 400
         
+        # Check if this is the last message in the session
+        is_last_message = data.get('is_last_message', False)
+        
         # Enhance system prompt with conversation context
-        enhanced_system_prompt = f"""You are participating in a Cognitive Behavioral Therapy (CBT) training simulation. Your role is to 
-        authentically portray a client in a therapy session, allowing trainee therapists to practice their therapeutic skills.
+        enhanced_system_prompt = f"""You are participating in a Cognitive Behavioral Therapy (CBT) training simulation. Your role is to authentically portray a client in a therapy session, allowing trainee therapists to practice their therapeutic skills.
 
 {system_prompt}
 
@@ -145,6 +147,10 @@ IMPORTANT GUIDELINES:
 - Be realistic about the pacing of disclosure - people don't immediately share everything
 - Your responses should feel like genuine dialogue, not monologues or reports
 - React to what the therapist says; let the conversation flow naturally"""
+
+        # Add session ending instruction if this is the last message
+        if is_last_message:
+            enhanced_system_prompt += """\n\nSESSION ENDING: This is the final message of the session. You must now politely indicate that you need to leave. Apologize briefly and mention that your time is up or you have another commitment. Keep it natural and brief (1-2 sentences). For example: "I'm sorry, but I need to go now - my time is up." or "I appreciate talking with you, but I have to leave now." """
         
         # Make request to Claude API using the anthropic client
         response = client.messages.create(

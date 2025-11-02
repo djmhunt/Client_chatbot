@@ -6,6 +6,9 @@ class ChatBot {
         this.conversationHistory = [];
         this.isTyping = false;
         this.claudeModel = null; // Will be loaded from backend
+        this.maxMessages = 30; // Maximum therapist messages per session
+        this.therapistMessageCount = 0; // Track therapist messages only
+        this.warningShown = false; // Track if 5-message warning shown
         
         this.initializeElements();
         this.loadConfig();
@@ -121,6 +124,8 @@ class ChatBot {
     clearChatForNewPersonality() {
         this.chatMessages.innerHTML = '';
         this.conversationHistory = [];
+        this.therapistMessageCount = 0;
+        this.warningShown = false;
     }
 
     async addInitialMessage() {
@@ -281,21 +286,46 @@ class ChatBot {
             return;
         }
 
+        // Check if session has ended
+        if (this.therapistMessageCount >= this.maxMessages) {
+            alert('This session has ended. Please start a new session or select a different client.');
+            return;
+        }
+
+        // Increment therapist message count
+        this.therapistMessageCount++;
+
         // Add user message to chat
         this.addMessage(message, 'user');
         this.messageInput.value = '';
         this.charCount.textContent = '0';
+
+        // Check if warning should be shown (5 messages remaining)
+        const messagesRemaining = this.maxMessages - this.therapistMessageCount;
+        if (messagesRemaining === 5 && !this.warningShown) {
+            this.addSystemMessage(`⏰ <strong>Session Time Warning:</strong> You have 5 messages remaining in this session. Please begin wrapping up the conversation with your client.`);
+            this.warningShown = true;
+        }
         
         // Show typing indicator
         this.showTypingIndicator();
         
         try {
-            const response = await this.callClaudeAPI(message);
+            // Check if this is the last message
+            const isLastMessage = this.therapistMessageCount >= this.maxMessages;
+            const response = await this.callClaudeAPI(message, isLastMessage);
             this.hideTypingIndicator();
             this.addMessage(response, 'bot');
+
+            // If session has ended, disable input and show message
+            if (isLastMessage) {
+                this.endSession();
+            }
         } catch (error) {
             this.hideTypingIndicator();
             this.handleError(error);
+            // Decrement count if message failed
+            this.therapistMessageCount--;
         }
     }
 
@@ -335,6 +365,37 @@ class ChatBot {
             role: sender === 'user' ? 'user' : 'assistant',
             content: content
         });
+    }
+
+    addSystemMessage(content) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message system-message';
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        
+        const messageText = document.createElement('p');
+        messageText.innerHTML = content; // Use innerHTML to support HTML formatting
+        
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'message-time';
+        timeSpan.textContent = this.formatTime(new Date());
+        
+        contentDiv.appendChild(messageText);
+        contentDiv.appendChild(timeSpan);
+        messageDiv.appendChild(contentDiv);
+        
+        this.chatMessages.appendChild(messageDiv);
+        this.scrollToBottom();
+    }
+
+    endSession() {
+        this.messageInput.disabled = true;
+        this.sendButton.disabled = true;
+        this.messageInput.placeholder = 'Session has ended. Please start a new session.';
+        this.updateStatus('Session Ended');
+        
+        this.addSystemMessage(`⏱️ <strong>Session Complete:</strong> This training session has ended (${this.maxMessages} messages reached). You can review the conversation, export to PDF, or start a new session.`);
     }
 
     showTypingIndicator() {
@@ -387,7 +448,7 @@ class ChatBot {
         }
     }
 
-    async callClaudeAPI(userMessage) {
+    async callClaudeAPI(userMessage, isLastMessage = false) {
         // Build the conversation history for Claude API
         const messages = [...this.conversationHistory];
         
@@ -403,7 +464,8 @@ class ChatBot {
             max_tokens: 1000,
             system: this.currentPersonality ? this.currentPersonality.personality : '',
             messages: messages,
-            api_key: this.apiKey
+            api_key: this.apiKey,
+            is_last_message: isLastMessage
         };
 
         try {
@@ -470,7 +532,16 @@ class ChatBot {
         if (confirm('Are you sure you want to start a new session with this client?')) {
             this.clearChatForNewPersonality();
             this.conversationHistory = [];
+            this.therapistMessageCount = 0;
+            this.warningShown = false;
+            
+            // Re-enable input if it was disabled
+            this.messageInput.disabled = false;
+            this.sendButton.disabled = false;
+            this.messageInput.placeholder = 'Type your message here...';
+            
             if (this.currentPersonality) {
+                this.updateStatus('Online');
                 this.addInitialMessage();
             }
         }
